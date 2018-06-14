@@ -4,9 +4,10 @@ class TRACKNET:
     def __init__(self, batch_size, train = True):
         self.parameters = {}
         self.batch_size = batch_size
-        self.target = tf.placeholder(tf.float32, [batch_size, 227, 227, 3])
-        self.image = tf.placeholder(tf.float32, [batch_size, 227, 227, 3])
-        # self.bbox = tf.placeholder(tf.float32, [batch_size, 4])
+        # self.target = tf.placeholder(tf.float32, [batch_size, 227, 227, 3])
+        # self.image = tf.placeholder(tf.float32, [batch_size, 227, 227, 3])
+        self.target = tf.placeholder(tf.float32, [None, 227, 227, 3])
+        self.image = tf.placeholder(tf.float32, [None, 227, 227, 3])
         self.train = train
         self.wd = 0.0005
     def build(self):

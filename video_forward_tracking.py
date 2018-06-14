@@ -20,8 +20,8 @@ config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 
 # parameters
-BATCH_SIZE = 1
-# BATCH_SIZE = 10
+# BATCH_SIZE = 1
+BATCH_SIZE = 64
 WIDTH = 227
 HEIGHT = 227
 
@@ -187,8 +187,8 @@ if __name__ == "__main__":
         dataset = dataset.prefetch(10)
         # print (dataset)
         iterator = dataset.make_one_shot_iterator()
-        print ('fid: %d, dataset test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
-        start_time = time.time()
+        # print ('fid: %d, dataset test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+        # start_time = time.time()
         # next_element = iterator.get_next()
         # print (next_element)
         # exit()
@@ -198,25 +198,27 @@ if __name__ == "__main__":
         next_bboxes = []
         # assert(BATCH_SIZE==1)
         # forward all bboxes 
-        for i in range(0, int(num_bboxes/BATCH_SIZE)):
+        for i in range(0, int(np.ceil(1.0*num_bboxes/BATCH_SIZE))):
             # cur_batch = sess.run(batch_queue)
-            start_time = time.time()
+            # start_time = time.time()
             cur_batch = sess.run(iterator.get_next())
-            print ('fid: %d, get batch: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
-            start_time = time.time()
+            # print ('fid: %d, get batch: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+            # start_time = time.time()
             [fc4] = sess.run([tracknet.fc4],feed_dict={tracknet.image:cur_batch[0],
                     tracknet.target:cur_batch[1]})
-            x1 = (227* fc4[0][0]/10)
-            y1 = (227* fc4[0][1]/10)
-            x2 = (227* fc4[0][2]/10)
-            y2 = (227* fc4[0][3]/10)
-            next_bboxes.append([x1,y1,x2,y2])
-            print ('fid: %d, forward test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+            # print (fc4.shape)
+            for batch_item in range(fc4.shape[0]):
+              x1 = (227* fc4[batch_item][0]/10)
+              y1 = (227* fc4[batch_item][1]/10)
+              x2 = (227* fc4[batch_item][2]/10)
+              y2 = (227* fc4[batch_item][3]/10)
+              next_bboxes.append([x1,y1,x2,y2])
+            # print ('fid: %d, forward test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
         # print (len(next_bboxes))
 
         
         # print ('fid: %d, net forward test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
-        start_time = time.time()
+        # start_time = time.time()
         ## save the result for the next frame
         targetbox = np.float32([[56.75, 56.75], [56.75,170.25], [170.25, 170.25]])
 
