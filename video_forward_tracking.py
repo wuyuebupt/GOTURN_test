@@ -69,7 +69,7 @@ def next_batch(input_queue):
         batch_size=BATCH_SIZE,
         num_threads=num_threads,
         capacity=min_queue_examples + (num_threads+2)*BATCH_SIZE)
-    print ('next_batch done')
+    # print ('next_batch done')
     return [search_batch, target_batch]
 
 
@@ -103,6 +103,9 @@ if __name__ == "__main__":
         ret[item.fid].append(item)
     print len(ret.keys())
 
+    ## open the output file
+    output = open(sys.argv[2], 'w')
+
     ## load model 
     tracknet = goturn_net.TRACKNET(BATCH_SIZE, train = False)
     tracknet.build()
@@ -125,6 +128,7 @@ if __name__ == "__main__":
     # prepare data in one frame
     forward_step = 1
 
+  
 
     for frame_index in ret.keys():
       img_current_path = fid_to_path[frame_index]
@@ -137,8 +141,8 @@ if __name__ == "__main__":
 
       img_next_path = fid_to_path[frame_index + forward_step]
       ## check if two images are from the same video
-      print (img_current_path)
-      print (img_next_path)
+      # print (img_current_path)
+      # print (img_next_path)
       vid_current = img_current_path.split('/')[-2]
       vid_next    = img_next_path.split('/')[-2]
       if vid_current == vid_next:
@@ -164,25 +168,27 @@ if __name__ == "__main__":
             patches_current.append(bbox_current)
             patches_next.append(bbox_next)
         num_bboxes = len(patches_current)
-        print (num_bboxes)
+        # print (num_bboxes)
 
 
         ## generate test batch and do the forward
         patches_current = np.asarray(patches_current, np.float64)
         patches_next = np.asarray(patches_next, np.float64)
-        print (patches_current.shape)
-        print (patches_next.shape)
+        # print (patches_current.shape)
+        # print (patches_next.shape)
 
         # target_tensors = tf.convert_to_tensor(patches_current, dtype=tf.float64)
         # search_tensors = tf.convert_to_tensor(patches_next, dtype=tf.float64)
         # input_queue = tf.train.slice_input_producer([search_tensors, target_tensors],shuffle=False)
         dataset = tf.data.Dataset.from_tensor_slices((patches_current, patches_next)) 
         # dataset = dataset.map(lambda patch_current, patch_next: return (tf.image.resize_images(patch_current, [HEIGHT,WIDTH], method=tf.image.ResizeMethod.BILINEAR), tf.image.resize_images(patch_next,[HEIGHT,WIDTH], method=tf.image.ResizeMethod.BILINEAR)))
-        dataset = dataset.map(lambda patch_current, patch_next: img_resize(patch_current, patch_next))
+        # dataset = dataset.map(lambda patch_current, patch_next: img_resize(patch_current, patch_next))
         dataset = dataset.batch(BATCH_SIZE)
-        dataset = dataset.prefetch(1)
-        print (dataset)
+        dataset = dataset.prefetch(10)
+        # print (dataset)
         iterator = dataset.make_one_shot_iterator()
+        print ('fid: %d, dataset test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+        start_time = time.time()
         # next_element = iterator.get_next()
         # print (next_element)
         # exit()
@@ -190,11 +196,14 @@ if __name__ == "__main__":
         # coord = tf.train.Coordinator()
         # tf.train.start_queue_runners(sess=sess, coord=coord)
         next_bboxes = []
-        assert(BATCH_SIZE==1)
+        # assert(BATCH_SIZE==1)
         # forward all bboxes 
         for i in range(0, int(num_bboxes/BATCH_SIZE)):
             # cur_batch = sess.run(batch_queue)
+            start_time = time.time()
             cur_batch = sess.run(iterator.get_next())
+            print ('fid: %d, get batch: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+            start_time = time.time()
             [fc4] = sess.run([tracknet.fc4],feed_dict={tracknet.image:cur_batch[0],
                     tracknet.target:cur_batch[1]})
             x1 = (227* fc4[0][0]/10)
@@ -202,10 +211,12 @@ if __name__ == "__main__":
             x2 = (227* fc4[0][2]/10)
             y2 = (227* fc4[0][3]/10)
             next_bboxes.append([x1,y1,x2,y2])
-        print (len(next_bboxes))
-        print ('test: time elapsed: %.3fs.'%(time.time()-start_time))
+            print ('fid: %d, forward test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+        # print (len(next_bboxes))
 
         
+        # print ('fid: %d, net forward test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+        start_time = time.time()
         ## save the result for the next frame
         targetbox = np.float32([[56.75, 56.75], [56.75,170.25], [170.25, 170.25]])
 
@@ -221,10 +232,20 @@ if __name__ == "__main__":
           item = {
                   'fid': current_bbox.fid+1,
                   'class_index': current_bbox.class_index,
-                  'score': current_bbox.class_index,
+                  'score': current_bbox.score,
                   'bbox': map(float, tracked_bbox)
                 }
-          print (item)
+          # print (item)
+          item = EasyDict(item)
+          outbbox = "{} {} {} {} {} {} {}\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
+          output.write(outbbox)
+        print ('fid: %d, post processing test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+          # start_time = time.time()
+          # write a new line
+        # print ('fid: %d, test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+
+    output.close()
+          
 
 
 
