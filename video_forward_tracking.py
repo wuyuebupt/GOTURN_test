@@ -9,7 +9,7 @@ import os
 import goturn_net
 import cv2
 import numpy as np
-
+import gc
 
 from collections import defaultdict
 from easydict import EasyDict
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     forward_step = 1
 
   
-
+    dataset = None
     for frame_index in ret.keys():
       img_current_path = fid_to_path[frame_index]
       frame_index_next = frame_index + forward_step
@@ -180,11 +180,16 @@ if __name__ == "__main__":
         # target_tensors = tf.convert_to_tensor(patches_current, dtype=tf.float64)
         # search_tensors = tf.convert_to_tensor(patches_next, dtype=tf.float64)
         # input_queue = tf.train.slice_input_producer([search_tensors, target_tensors],shuffle=False)
+
+        if dataset != None:
+          del dataset
         dataset = tf.data.Dataset.from_tensor_slices((patches_current, patches_next)) 
+        print ('fid: %d '%(frame_index))
+        continue
         # dataset = dataset.map(lambda patch_current, patch_next: return (tf.image.resize_images(patch_current, [HEIGHT,WIDTH], method=tf.image.ResizeMethod.BILINEAR), tf.image.resize_images(patch_next,[HEIGHT,WIDTH], method=tf.image.ResizeMethod.BILINEAR)))
         # dataset = dataset.map(lambda patch_current, patch_next: img_resize(patch_current, patch_next))
         dataset = dataset.batch(BATCH_SIZE)
-        dataset = dataset.prefetch(10)
+        dataset = dataset.prefetch(1)
         # print (dataset)
         iterator = dataset.make_one_shot_iterator()
         # print ('fid: %d, dataset test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
@@ -199,13 +204,18 @@ if __name__ == "__main__":
         # assert(BATCH_SIZE==1)
         # forward all bboxes 
         for i in range(0, int(np.ceil(1.0*num_bboxes/BATCH_SIZE))):
-            # cur_batch = sess.run(batch_queue)
+            # cur_batch = sess.run(batch_queue])
             # start_time = time.time()
-            cur_batch = sess.run(iterator.get_next())
+
+            cur_batch = sess.run([iterator.get_next()])
             # print ('fid: %d, get batch: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
             # start_time = time.time()
-            [fc4] = sess.run([tracknet.fc4],feed_dict={tracknet.image:cur_batch[0],
-                    tracknet.target:cur_batch[1]})
+
+
+            # [fc4] = sess.run([tracknet.fc4],feed_dict={tracknet.image:cur_batch[0],
+            #         tracknet.target:cur_batch[1]})
+            # [fc4] = []
+            break
             # print (fc4.shape)
             for batch_item in range(fc4.shape[0]):
               x1 = (227* fc4[batch_item][0]/10)
@@ -241,10 +251,10 @@ if __name__ == "__main__":
           item = EasyDict(item)
           outbbox = "{} {} {} {} {} {} {}\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
           output.write(outbbox)
-        print ('fid: %d, post processing test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
-          # start_time = time.time()
-          # write a new line
-        # print ('fid: %d, test: time elapsed: %.3fs.'%(frame_index ,time.time()-start_time))
+        print ('fid: %d with %d bboxes in video %s, time elapsed: %.3fs.'%(frame_index , len(next_bboxes), vid_current, time.time()-start_time))
+        # clean memory
+        if frame_index%100 == 0:
+          gc.collect()
 
     output.close()
           

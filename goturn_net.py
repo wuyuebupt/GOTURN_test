@@ -125,9 +125,9 @@ class TRACKNET:
         self.print_shapes()
         # self.loss = self._loss_layer(self.fc4, self.bbox ,name = "loss")
         # self.loss = self._loss_layer(self.fc4, self.bbox ,name = "loss")
-        l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES), name='l2_weight_loss')
+        # l2_loss = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES), name='l2_weight_loss')
         # self.loss_wdecay = self.loss + l2_loss
-        self.loss_wdecay = l2_loss
+        # self.loss_wdecay = l2_loss
 
     def _loss_layer(self, bottom, label, name = None):
         # diff = tf.subtract(self.fc4, self.bbox)
