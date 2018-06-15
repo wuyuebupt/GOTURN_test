@@ -66,7 +66,7 @@ if __name__ == "__main__":
     output = open(sys.argv[3], 'w')
 
     # prepare data in one frame
-    forward_step = 1
+    forward_step = -1
   
     dataset = None
 
@@ -75,8 +75,8 @@ if __name__ == "__main__":
       frame_index_next = frame_index + forward_step
 
       # last frame 
-      if frame_index_next > length_fids:
-        print ("the last frame")
+      if frame_index_next <= 0 :
+        print ("the first frame")
         continue
 
       img_next_path = fid_to_path[frame_index + forward_step]
