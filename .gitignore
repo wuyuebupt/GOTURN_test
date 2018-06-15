@@ -1,4 +1,5 @@
 checkpoints/
 tmpdata/
+tmp_images/
 *.pyc
 *.swp
