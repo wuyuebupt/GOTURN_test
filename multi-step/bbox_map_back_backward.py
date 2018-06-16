@@ -107,7 +107,7 @@ if __name__ == "__main__":
             tracked_bbox = [original_bbox[0][0], original_bbox[1][0], original_bbox[0][1], original_bbox[1][1]]
 
             # write the output
-            outbbox = "{} {} {} {} {} {} {}\n".format(item.fid+1, item.class_index, item.score, tracked_bbox[0] , tracked_bbox[1] , tracked_bbox[2] , tracked_bbox[3] )
+            outbbox = "{} {} {} {} {} {} {}\n".format(item.fid-1, item.class_index, item.score, tracked_bbox[0] , tracked_bbox[1] , tracked_bbox[2] , tracked_bbox[3] )
             output.write(outbbox)
             print (basename)
     output.close()
