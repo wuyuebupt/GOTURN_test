@@ -176,6 +176,9 @@ if __name__ == '__main__':
 	output = open(sys.argv[3], 'w')
 	# remove the current images
 	for frame_index, frame in enumerate(vid['frames']):
+		print (frame_index)
+		print (frame)
+		exit()
 		frame_index = fids[frame_index]
 
 		## ## check if two images are from the same video
@@ -193,8 +196,10 @@ if __name__ == '__main__':
 		imgbasename = os.path.basename(imgpath)
 		imgsavepath = os.path.join('saveImgs/', imgbasename)
 
-	        boxes = [track_box_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
-	        classes = [track_class_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
+	        # boxes = [track_box_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
+	        # classes = [track_class_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
+	        boxes = [track_box_at_frame(tracklet, frame['frame']+1) for tracklet in [anno['track'] for anno in annot['annotations']]]
+	        classes = [track_class_at_frame(tracklet, frame['frame']+1) for tracklet in [anno['track'] for anno in annot['annotations']]]
 		# print (boxes)
 		# print (classes)
 

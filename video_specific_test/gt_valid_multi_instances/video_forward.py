@@ -280,7 +280,7 @@ if __name__ == '__main__':
 		frame_index = obj['fid']
 		# get frame
 		print fid_min, frame_index
-		frame_relative_index = frame_index - fid_min
+		frame_relative_index_next = frame_index - fid_min + 1
 		obj_index_next = obj_index + 1
 		
 		# frame_index = fids[frame_index]
@@ -292,16 +292,16 @@ if __name__ == '__main__':
 		vid_current = img_current_path.split('/')[-2]
 		vid_next    = img_next_path.split('/')[-2]
 		
-		if vid_current != vid_next:
-			## the last frame in the video -> output
-			break
+		# if vid_current != vid_next:
+		# 	## the last frame in the video -> output
+		# 	break
 		# get the next frame
 		imgpath = img_next_path
 		imgbasename = os.path.basename(imgpath)
 		imgsavepath = os.path.join('saveImgs/', imgbasename)
 
-	        boxes = [track_box_at_frame(tracklet, frame_relative_index) for tracklet in [anno['track'] for anno in annot['annotations']]]
-	        classes = [track_class_at_frame(tracklet, frame_relative_index) for tracklet in [anno['track'] for anno in annot['annotations']]]
+	        boxes = [track_box_at_frame(tracklet, frame_relative_index_next) for tracklet in [anno['track'] for anno in annot['annotations']]]
+	        classes = [track_class_at_frame(tracklet, frame_relative_index_next) for tracklet in [anno['track'] for anno in annot['annotations']]]
 	        # boxes = [track_box_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
 	        # classes = [track_class_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
 		# print (boxes)
@@ -369,7 +369,7 @@ if __name__ == '__main__':
 			original_bbox = np.matmul(M_inv, pts_new.T)
 			tracked_bbox = [original_bbox[0][0], original_bbox[1][0], original_bbox[0][1], original_bbox[1][1]]
 			item = {
-			        'fid': current_bbox.fid + 1 ,
+			        'fid': current_bbox.fid + 1,
 			        'class_index': current_bbox.class_index,
 			        'score': current_bbox.score,
 			        'bbox': map(float, tracked_bbox)
@@ -397,21 +397,37 @@ if __name__ == '__main__':
 		# pred_class_ = CLASS_NAMES[pred.class_index]
 		
 		# get max IoU and then judge
+
+		# multiple GT here
+		# match D to one T -> check if T is better
+
+		gt_bbox = []
+		det_iou_max = -1
 		for bbox_, class_ in zip(boxes, classes):
 			if bbox_ != None and class_ != None:
-				det_IoU = cal_IoU(bbox_, det_bbox.bbox)
-				tracking_IoU = cal_IoU(bbox_, tracking_bbox.bbox)
-				print det_IoU, tracking_IoU
-				if tracking_IoU > det_IoU and tracking_IoU > 0.1:
-					# ret[frame_index_next] = tracking_frame_index_next
-					det_tracklet_track[obj_index_next] = tracking_frame_index_next
-					item = tracking_bbox
-					outbbox = "{} {} {} {} {} {} {} t\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
-					output.write(outbbox)
-					break
-				else:
-					item = det_bbox
-					outbbox = "{} {} {} {} {} {} {} d\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
-					output.write(outbbox)
-					break
+				print class_, det_bbox.class_index
+				if class_ == CLASS_NAMES[det_bbox.class_index]:
+					det_iou = cal_IoU(bbox_, det_bbox.bbox)
+					if det_iou > det_iou_max:
+						det_iou_max = det_iou
+						gt_bbox = bbox_
+		# if not gt_bbox:
+		print gt_bbox, len(gt_bbox), det_iou_max
+		if len(gt_bbox) == 4:
+			tracking_iou = cal_IoU(gt_bbox, tracking_bbox.bbox)	
+			if tracking_iou > det_iou_max and tracking_iou > 0.1:
+				det_tracklet_track[obj_index_next] = tracking_frame_index_next
+				item = tracking_bbox
+				outbbox = "{} {} {} {} {} {} {} t\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
+				output.write(outbbox)
+			else:
+				item = det_bbox
+				outbbox = "{} {} {} {} {} {} {} d\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
+				output.write(outbbox)
+				
+		else:
+			item = det_bbox
+			outbbox = "{} {} {} {} {} {} {} d\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
+			output.write(outbbox)
+			
 	output.close()	
