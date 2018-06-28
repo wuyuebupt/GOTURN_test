@@ -379,14 +379,15 @@ if __name__ == '__main__':
 		patches_current = np.asarray(patches_current, np.float64)
 		patches_next = np.asarray(patches_next, np.float64)
 		
-		patches_current_tensors = sess.run(tf.convert_to_tensor(patches_current, dtype=tf.float64))
-		patches_current_tensors = sess.run(tf.image.resize_images(patches_current_tensors,[HEIGHT,WIDTH],
-		                  method=tf.image.ResizeMethod.BILINEAR))
-		patches_next_tensors = sess.run(tf.convert_to_tensor(patches_next, dtype=tf.float64))
-		patches_next_tensors = sess.run(tf.image.resize_images(patches_next_tensors,[HEIGHT,WIDTH],
-		                  method=tf.image.ResizeMethod.BILINEAR))
-		print (patches_current_tensors.shape)
-		fc4 = sess.run(tracknet.fc4, feed_dict={tracknet.image:patches_next_tensors, tracknet.target:patches_current_tensors})
+		# patches_current_tensors = sess.run(tf.convert_to_tensor(patches_current, dtype=tf.float64))
+		# patches_current_tensors = sess.run(tf.image.resize_images(patches_current_tensors,[HEIGHT,WIDTH],
+		#                   method=tf.image.ResizeMethod.BILINEAR))
+		# patches_next_tensors = sess.run(tf.convert_to_tensor(patches_next, dtype=tf.float64))
+		# patches_next_tensors = sess.run(tf.image.resize_images(patches_next_tensors,[HEIGHT,WIDTH],
+		#                   method=tf.image.ResizeMethod.BILINEAR))
+		# print (patches_current_tensors.shape)
+		# fc4 = sess.run(tracknet.fc4, feed_dict={tracknet.image:patches_next_tensors, tracknet.target:patches_current_tensors})
+		fc4 = sess.run(tracknet.fc4, feed_dict={tracknet.image:patches_next, tracknet.target:patches_current})
 		print (fc4)
 
 		next_bboxes = []
