@@ -12,6 +12,8 @@ import tensorflow as tf
 from scipy.optimize import linear_sum_assignment
 import math
 
+from munkres import Munkres, print_matrix, make_cost_matrix, DISALLOWED
+
 
 BATCH_SIZE = 64
 WIDTH = 227
@@ -112,32 +114,55 @@ def det_to_tracklet(ret):
 			num_prev = len(det_previous)
 			num_curr = len(det_current)
 			cost = np.zeros((num_prev, num_curr))
+			# cost = []
 			# print cost.shape
 			for i in range(num_prev):
+				# cost_line = []
 				for j in range(num_curr):
 					bbox_prev = det_previous[i]
 					bbox_curr = det_current[j]
 					# print bbox_prev, bbox_curr
 					# iou = 1 - cal_IoU(bbox_prev.bbox, bbox_curr.bbox)
 					# print cal_IoU(bbox_prev.bbox, bbox_curr.bbox)
+					# iou = cal_IoU(bbox_prev.bbox, bbox_curr.bbox)
+					# if iou > 0.3:
+					# 	cost_line.append(-1*math.log(cal_IoU(bbox_prev.bbox, bbox_curr.bbox)+np.finfo(float).eps))
+					# else:
+					#	cost_line.append(DISALLOWED)
 					iou = -1* math.log(cal_IoU(bbox_prev.bbox, bbox_curr.bbox)+np.finfo(float).eps)
 					cost[i,j] = iou
-			print cost
+				# cost.append(cost_line)
+			
+			# print cost
 			# hungarian
+			# m = Munkres()
+			# indexes = m.compute(cost)
+			# row_ind = []
+			# col_ind = []
+			# for row, column in indexes:
+			# 	row_ind.append(row)
+			# 	col_ind.append(column)
+			# 	# print row,column
+			# exit()
 			row_ind, col_ind = linear_sum_assignment(cost)
 			# print row_ind, col_ind
 
 			# assign fid, 
 			# and the left start a new track
 			assert (len(row_ind) == len(col_ind))
-			hard_threshold = -1*math.log(0.3)
+			hard_threshold = -1*math.log(0.5)
 			# hard_threshold = 10
+			# print row_ind, col_ind
 			for i in range(num_curr):
 				if i in col_ind:
 					# find i in col_ind 
+					# print i
+					# i_ind = col_ind.index(i)
+					# print np.where(col_ind == i)
 					i_ind = np.where(col_ind == i)[0][0]
 					cost_i_j = cost[i_ind, i]
 					if cost_i_j < hard_threshold:
+					# if True:
 						# print i_ind
 						# get previous track
 						# print det_previous[i_ind]
@@ -329,7 +354,7 @@ if __name__ == '__main__':
 		target_dir = os.path.join('images_track/', track_id_dir)
 		if not os.path.exists(target_dir):
 			os.makedirs(target_dir)
-		print obj_index, obj, len(det_tracklet_track)
+		# print obj_index, obj, len(det_tracklet_track)
 		
 		if obj_index == 0:
 			## output the first detection
