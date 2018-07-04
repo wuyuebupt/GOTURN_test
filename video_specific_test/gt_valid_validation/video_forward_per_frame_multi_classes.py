@@ -372,13 +372,14 @@ if __name__ == '__main__':
 	  frames_ret = sorted(ret_classes[ret_per_class].keys())
 	  ret_current_class = ret_classes[ret_per_class]
 	  print frames_ret
-	  assert (len(frames_ret) > 1)
+	  assert (len(frames_ret) >= 1)
 	  if len(frames_ret) == 1:
 	    # for item in ret_classes[ret_per_class][frames_ret[0]]:
 	    for item in ret_current_class[frames_ret[0]]:
 		outbbox = "{} {} {} {} {} {} {} d\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
 		output.write(outbbox)
 	  else:
+	    assert(len(frames_ret)>=2)
 	    ## output the results
 	    for frame_index, frame_index_abs in enumerate(frames_ret[:-1]):
 	        # print frame_index, frame_index_abs
