@@ -380,9 +380,12 @@ if __name__ == '__main__':
 		output.write(outbbox)
 	  else:
 	    ## output the results
-	    for frame_index, frame_index_abs in enumerate(frames_ret[:-1]):
-	        print frame_index, frame_index_abs
-	    # for frame_index, frame in enumerate(vid['frames'][:-1]):
+	    # for frame_index, frame_index_abs in enumerate(frames_ret[:-1]):
+	    #    print frame_index, frame_index_abs
+	    for frame_index, frame in enumerate(vid['frames'][:-1]):
+		print frame_index, frame
+		frame_index_abs = frame_index + fid_min
+		print frame_index, frame_index_abs
 	# for frame_index, frame in enumerate(vid['frames']):
 	# for det_tracklet in det_tracklets
 	#     # print det_tracklet['id']
@@ -436,6 +439,19 @@ if __name__ == '__main__':
 		# get current detects 
 		# preds = ret[frame_index_abs]
 		preds = ret_current_class[frame_index_abs]
+
+		# previous frames does not have any bboxes
+		# get det results 
+		det_frame_index_next = ret_current_class[frame_index_next_abs]
+		if len(preds) == 0:
+			# check detection results
+			for item in det_frame_index_next:
+				outbbox = "{} {} {} {:.2f} {:.2f} {:.2f} {:.2f} {}\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3], item.flag)
+				output.write(outbbox)
+			continue	
+
+
+		# else do the tracknig -> 
 		# preds = [obj]
 
 		##################################### tracking
@@ -510,8 +526,6 @@ if __name__ == '__main__':
 		## 
 
 		##################################### tracking
-		# get det results 
-		det_frame_index_next = ret_current_class[frame_index_next_abs]
 		# det_frame_index_next = frames_ret[frame_index_next_abs]
 		# det_frame_index_next = [det_tracklet_track[obj_index_next]]
 
