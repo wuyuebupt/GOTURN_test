@@ -365,81 +365,59 @@ if __name__ == '__main__':
 	output = open(sys.argv[3], 'w')
 	# remove the current images
 
-	for ret_per_class in ret_classes.keys():
-	  current_class = ret_per_class
-	  print ret_per_class
-	  print len(ret_classes[ret_per_class])
-	  frames_ret = sorted(ret_classes[ret_per_class].keys())
-	  ret_current_class = ret_classes[ret_per_class]
-	  # print frames_ret
-	  assert (len(frames_ret) > 1)
-	  if len(frames_ret) == 1:
-	    # for item in ret_classes[ret_per_class][frames_ret[0]]:
-	    for item in ret_current_class[frames_ret[0]]:
-		outbbox = "{} {} {} {} {} {} {} d\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
-		output.write(outbbox)
-	  else:
-	    ## output the results
-	    # for frame_index, frame_index_abs in enumerate(frames_ret[:-1]):
-	    #    print frame_index, frame_index_abs
-	    for frame_index, frame in enumerate(vid['frames'][:-1]):
-		# print frame_index, frame
-		frame_index_abs = frame_index + fid_min
-		print frame_index, frame_index_abs
-	# for frame_index, frame in enumerate(vid['frames']):
-	# for det_tracklet in det_tracklets
-	#     # print det_tracklet['id']
-	#     det_tracklet_track = det_tracklet['track']
-	#     for obj_index, obj in enumerate(det_tracklet_track[:-1]):
-		if frame_index == 0:
-			## output the first detection
-			# frame_index_abs = fids[frame_index]
-			# for item in ret[frame_index_abs]:
-			for item in ret_current_class[frame_index_abs]:
-				outbbox = "{} {} {} {} {} {} {} d\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
-				output.write(outbbox)
 
-		# frame_index = obj['fid']
-		# frame_index_abs = fids[frame_index]
-
-		# get frame
-		# print fid_min, frame_index_abs
-		# obj_index_next = obj_index + 1
-		
-		# frame_index = fids[frame_index]
-
+	## loop through all frames
+	for frame_index, frame in enumerate(vid['frames'][:-1]):
+	  # print frame_index, frame
+	  frame_index_abs = frame_index + fid_min
+	  print frame_index, frame_index_abs
 		## ## check if two images are from the same video
-		frame_index_next_abs = frame_index_abs + 1
-		img_current_path = fid_to_path[frame_index_abs]
-		img_next_path = fid_to_path[frame_index_next_abs]
-		vid_current = img_current_path.split('/')[-2]
-		vid_next    = img_next_path.split('/')[-2]
-		
-		# if vid_current != vid_next:
-		# 	## the last frame in the video -> output
-		# 	break
-		# get the next frame
-		imgpath = img_next_path
-		imgbasename = os.path.basename(imgpath)
-		imgsavepath = os.path.join('saveImgs/', imgbasename)
+	  frame_index_next_abs = frame_index_abs + 1
+	  img_current_path = fid_to_path[frame_index_abs]
+	  img_next_path = fid_to_path[frame_index_next_abs]
+	  vid_current = img_current_path.split('/')[-2]
+	  vid_next    = img_next_path.split('/')[-2]
+	  
+	  # if vid_current != vid_next:
+	  # 	## the last frame in the video -> output
+	  # 	break
+	  # get the next frame
+	  imgpath = img_next_path
+	  imgbasename = os.path.basename(imgpath)
+	  imgsavepath = os.path.join('saveImgs/', imgbasename)
 
-		# frame_next = vid['frames'][frame_index + 1]
-		# frame_next = frame_index_abs + 1
-		frame_relative_index_next = frame_index_abs - fid_min + 1
-	        boxes = [track_box_at_frame(tracklet, frame_relative_index_next) for tracklet in [anno['track'] for anno in annot['annotations']]]
-	        classes = [track_class_at_frame(tracklet, frame_relative_index_next) for tracklet in [anno['track'] for anno in annot['annotations']]]
-	        # boxes = [track_box_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
-	        # classes = [track_class_at_frame(tracklet, frame['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
-	        # boxes = [track_box_at_frame(tracklet, frame_next['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
-	        # classes = [track_class_at_frame(tracklet, frame_next['frame']) for tracklet in [anno['track'] for anno in annot['annotations']]]
-		# # print (boxes)
-		# # print (classes)
+	  # frame_next = vid['frames'][frame_index + 1]
+	  # frame_next = frame_index_abs + 1
+	  frame_relative_index_next = frame_index_abs - fid_min + 1
+          boxes = [track_box_at_frame(tracklet, frame_relative_index_next) for tracklet in [anno['track'] for anno in annot['annotations']]]
+          classes = [track_class_at_frame(tracklet, frame_relative_index_next) for tracklet in [anno['track'] for anno in annot['annotations']]]
+
+	  img_current = cv2.imread(img_current_path)
+	  img_next = cv2.imread(img_next_path)
+	  targetbox = np.float32([[56.75, 56.75], [56.75,170.25], [170.25, 170.25]])
+
+	  for ret_per_class in ret_classes.keys():
+	    current_class = ret_per_class
+	    print ret_per_class
+	    # print len(ret_classes[ret_per_class])
+	    frames_ret = sorted(ret_classes[ret_per_class].keys())
+	    ret_current_class = ret_classes[ret_per_class]
+	    # print frames_ret
+	    if frame_index == 0:
+		## output the first detection
+		# frame_index_abs = fids[frame_index]
+		# for item in ret[frame_index_abs]:
+		for item in ret_current_class[frame_index_abs]:
+			outbbox = "{} {} {} {} {} {} {} d\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3])
+			output.write(outbbox)
 
 
+	    # at least should have one more objs
+	    assert (len(frames_ret) >= 1)
+	    if (len(frames_ret) >= 1):
 		# get current detects 
 		# preds = ret[frame_index_abs]
 		preds = ret_current_class[frame_index_abs]
-
 		# previous frames does not have any bboxes
 		# get det results 
 		det_frame_index_next = ret_current_class[frame_index_next_abs]
@@ -449,18 +427,7 @@ if __name__ == '__main__':
 				outbbox = "{} {} {} {:.2f} {:.2f} {:.2f} {:.2f} {}\n".format(item.fid, item.class_index, item.score, item.bbox[0], item.bbox[1], item.bbox[2], item.bbox[3], item.flag)
 				output.write(outbbox)
 			continue	
-
-
-		# else do the tracknig -> 
-		# preds = [obj]
-
 		##################################### tracking
-
-		# print (img_current_path)
-		img_current = cv2.imread(img_current_path)
-		img_next = cv2.imread(img_next_path)
-		targetbox = np.float32([[56.75, 56.75], [56.75,170.25], [170.25, 170.25]])
-		
 		patches_current = []
 		patches_next = []
 		# print preds
