@@ -223,6 +223,8 @@ def assign_res_to_gt( res_bbox, ground_truth_bboxes):
 	# # print row_ind, col_ind
 	# assign fid, 
 	assert (len(row_ind) == len(col_ind))
+	# hard_threshold = -1 * math.log(0.5)
+	# hard_threshold = -1 * math.log(0.1)
 	hard_threshold = -1 * math.log(0.1)
 	assign_res = []
 	# # print (hard_threshold)
@@ -575,13 +577,20 @@ if __name__ == '__main__':
 			det_iou 	= cal_IoU(gtbbox, d_bbox.bbox)
 			# print tracking_iou, det_iou
 			if tracking_iou > det_iou:
+				t_bbox.flag = "{}_{:.2f}_{:.2f}".format('d_to_t', det_iou, tracking_iou)
 				d_and_t_bboxes.append(t_bbox)
 			else:
 				d_and_t_bboxes.append(d_bbox)
 		# case 2
 		for g_t_index in g_t_matched:
 			t_index = g_t_index[1]
-			t_bbox = tracking_frame_index_next[t_index]	
+			t_bbox = tracking_frame_index_next[t_index]
+			gt_index = g_t_index[0]
+			gtbbox = ground_truth_bboxes[gt_index]
+			t_index = g_t_index[1]
+			tracking_iou 	= cal_IoU(gtbbox, t_bbox.bbox)
+			t_bbox.flag = "{}_{:.2f}".format('nothing_to_t', tracking_iou)
+			# t_bbox.flag = 
 			d_and_t_bboxes.append(t_bbox)
 		# case 3
 		for d_index in d_rest:
